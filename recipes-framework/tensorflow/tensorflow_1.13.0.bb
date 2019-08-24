@@ -23,36 +23,16 @@ SRC_URI = "git://github.com/tensorflow/tensorflow.git;branch=r1.13 \
 
 S = "${WORKDIR}/git"
 
-SRC_URI += "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz;name=model-inv3"
-SRC_URI[model-inv3.md5sum] = "a904ddf15593d03c7dd786d552e22d73"
-SRC_URI[model-inv3.sha256sum] = "7045b72a954af4dce36346f478610acdccbf149168fa25c78e54e32f0c723d6d"
-
-SRC_URI += "https://storage.googleapis.com/download.tensorflow.org/models/tflite/mobilenet_v1_1.0_224_quant_and_labels.zip;name=model-mobv1"
-SRC_URI[model-mobv1.md5sum] = "38ac0c626947875bd311ef96c8baab62"
-SRC_URI[model-mobv1.sha256sum] = "2f8054076cf655e1a73778a49bd8fd0306d32b290b7e576dda9574f00f186c0f"
-
 DEPENDS += " \
     python3 \
     python3-numpy-native \
-    python3-keras-applications-native \
-    python3-keras-preprocessing-native \
     python3-pip-native \
-    python3-wheel-native \
 "
 
 RDEPENDS_${PN} += " \
     python3 \
     python3-numpy \
-    python3-keras-applications \
-    python3-keras-preprocessing \
     python3-protobuf \
-    python3-grpcio \
-    python3-absl \
-    python3-astor \
-    python3-gast \
-    python3-termcolor \
-    tensorboard \
-    tensorflow-estimator \
 "
 
 inherit python3native bazel
@@ -142,50 +122,6 @@ do_install() {
         ${D}${libdir}
     install -m 644 ${S}/bazel-bin/tensorflow/libtensorflow_framework.so \
         ${D}${libdir}
-
-    install -d ${D}${sbindir}
-    install -m 755 ${S}/bazel-bin/tensorflow/tools/benchmark/benchmark_model \
-        ${D}${sbindir}
-
-    install -m 755 ${S}/bazel-bin/tensorflow/examples/label_image/label_image \
-        ${D}${sbindir}
-
-    install -m 755 ${S}/bazel-bin/tensorflow/lite/examples/label_image/label_image \
-        ${D}${sbindir}/label_image.lite
-
-    install -d ${D}${datadir}/label_image
-    install -m 644 ${WORKDIR}/imagenet_slim_labels.txt ${D}${datadir}/label_image
-    install -m 644 ${WORKDIR}/inception_v3_2016_08_28_frozen.pb \
-        ${D}${datadir}/label_image
-    install -m 644 ${S}/tensorflow/examples/label_image/data/grace_hopper.jpg \
-        ${D}${datadir}/label_image
-
-    install -m 644 ${WORKDIR}/labels_mobilenet_quant_v1_224.txt ${D}${datadir}/label_image
-    install -m 644 ${WORKDIR}/mobilenet_v1_1.0_224_quant.tflite \
-        ${D}${datadir}/label_image
-    install -m 644 ${S}/tensorflow/lite/examples/label_image/testdata/grace_hopper.bmp \
-        ${D}${datadir}/label_image
-
-
-    export TMPDIR="${WORKDIR}"
-    echo "Generating pip package"
-    BDIST_OPTS="--universal" \
-        ${S}/bazel-bin/tensorflow/tools/pip_package/build_pip_package ${WORKDIR}
-
-    echo "Installing pip package"
-    install -d ${D}/${PYTHON_SITEPACKAGES_DIR}
-    ${STAGING_BINDIR_NATIVE}/pip3 install --disable-pip-version-check -v \
-        -t ${D}/${PYTHON_SITEPACKAGES_DIR} --no-cache-dir --no-deps \
-         ${WORKDIR}/tensorflow*.whl
-
-    (
-        cd ${D}${PYTHON_SITEPACKAGES_DIR}/bin;
-        for app in `ls`; do
-            sed -i "s:^'''exec' ${PYTHON} :'''exec' /usr/bin/python3 :g" $app
-            mv $app ${D}${sbindir}
-        done
-
-    )
 }
 
 FILES_${PN}-dev = ""
