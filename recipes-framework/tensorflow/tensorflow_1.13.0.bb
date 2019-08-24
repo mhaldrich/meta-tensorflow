@@ -105,10 +105,6 @@ do_compile () {
         //tensorflow:libtensorflow.so \
         //tensorflow:libtensorflow_cc.so \
         //tensorflow:libtensorflow_framework.so \
-        //tensorflow/tools/benchmark:benchmark_model \
-        //tensorflow/tools/pip_package:build_pip_package \
-        tensorflow/examples/label_image/... \
-        //tensorflow/lite/examples/label_image:label_image \
         ${TF_TARGET_EXTRA}
 
     ${BAZEL} shutdown
