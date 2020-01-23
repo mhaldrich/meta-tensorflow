@@ -104,6 +104,17 @@ do_compile () {
         //tensorflow:libtensorflow.so \
         //tensorflow:libtensorflow_cc.so \
         //tensorflow:libtensorflow_framework.so \
+        //tensorflow/core:framework_internal \
+        //tensorflow/core:tensorflow \
+        //tensorflow/cc:cc_ops \
+        //tensorflow/cc:client_session \
+        //tensorflow/cc:scope \
+        //tensorflow/c:c_api \
+        //tensorflow:tf_exported_symbols.lds \
+        //tensorflow/core:framework_internal_impl \
+        //tensorflow/core:lib_internal_impl \
+        //tensorflow/core:core_cpu_impl \
+        //tensorflow/stream_executor:stream_executor_impl \
         ${TF_TARGET_EXTRA}
 
     ${BAZEL} shutdown
@@ -117,9 +128,43 @@ do_install() {
         ${D}${libdir}
     install -m 644 ${S}/bazel-bin/tensorflow/libtensorflow_framework.so \
         ${D}${libdir}
+
+    install -d ${D}${includedir}/tensorflow/core/framework \
+        ${D}${includedir}/tensorflow/core/lib/core \
+        ${D}${includedir}/tensorflow/core/protobuf \
+        ${D}${includedir}/tensorflow/core/util \
+        ${D}${includedir}/tensorflow/cc/ops \
+        ${D}${includedir}/tensorflow/c
+
+    install -m 644 ${S}/tensorflow/core/framework/*.h \
+        ${D}${includedir}/tensorflow/core/framework/
+    install -m 644 ${S}/tensorflow/core/lib/core/*.h \
+        ${D}${includedir}/tensorflow/core/lib/core/
+    install -m 644 ${S}/tensorflow/core/util/*.h \
+        ${D}${includedir}/tensorflow/core/util/
+    install -m 644 ${S}/tensorflow/cc/ops/*.h \
+        ${D}${includedir}/tensorflow/cc/ops/
+    install -m 644 ${S}/tensorflow/c/*.h \
+        ${D}${includedir}/tensorflow/c/
+
+    cat << -EOF > tensorflow.pc
+prefix=/usr
+exec_prefix=/lib
+libdir=/usr/lib
+includedir=/usr/include
+Name: TensorFlow
+Version: 1.13.0
+Description: Library for computation using data flow graphs
+Requires:
+Libs: -L/usr/lib -ltensorflow
+Cflags: -I/usr/include
+-EOF
+
+    install -d ${D}${datadir}/pkgconfig
+    install -m 644 tensorflow.pc ${D}${datadir}/pkgconfig/
 }
 
-FILES_${PN}-dev = ""
+FILES_${PN}-dev = "${includedir}/tensorflow/* ${datadir}/pkgconfig/tensorflow.pc"
 INSANE_SKIP_${PN} += "dev-so \
                      "
 FILES_${PN} += "${libdir}/* ${datadir}/*"
