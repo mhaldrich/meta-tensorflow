@@ -15,7 +15,7 @@ new file mode 100644
 index 0000000000..30f1d7b252
 --- /dev/null
 +++ b/third_party/systemlibs/0001-Fix-gettid-naming-conflict.patch
-@@ -0,0 +1,37 @@
+@@ -0,1 +1,37 @@
 +From de6255941a5e1c2fb2d50e57f84e38c09f45023d Mon Sep 17 00:00:00 2001
 +From: Juanli Shen <juanlishen@google.com>
 +Date: Fri, 23 Aug 2019 08:46:09 -0700
@@ -32,12 +32,12 @@ index 0000000000..30f1d7b252
 +@@ -40,7 +40,9 @@
 + #include <time.h>
 + #include <unistd.h>
-+ 
++
 +-static long gettid(void) { return syscall(__NR_gettid); }
 ++// Not naming it as gettid() to avoid duplicate declarations when complied with
 ++// GCC 9.1.
 ++static long local_gettid(void) { return syscall(__NR_gettid); }
-+ 
++
 + void gpr_log(const char* file, int line, gpr_log_severity severity,
 +	       const char* format, ...) {
 +@@ -70,7 +72,7 @@ void gpr_default_log(gpr_log_func_args* args) {
@@ -46,7 +46,7 @@ index 0000000000..30f1d7b252
 +   static __thread long tid = 0;
 +-  if (tid == 0) tid = gettid();
 ++  if (tid == 0) tid = local_gettid();
-+ 
++
 +   timer = static_cast<time_t>(now.tv_sec);
 +   final_slash = strrchr(args->file, '/');
 +
